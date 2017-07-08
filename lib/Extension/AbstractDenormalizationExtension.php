@@ -23,7 +23,7 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
     /**
      * {@inheritdoc}
      */
-    public function configureContext(OptionsResolver $resolver, array $options)
+    public function configureContext(OptionsResolver $resolver)
     {
         $resolver
             ->setDefaults([

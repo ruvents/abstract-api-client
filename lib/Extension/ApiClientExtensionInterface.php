@@ -7,5 +7,5 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 interface ApiClientExtensionInterface extends EventSubscriberInterface
 {
-    public function configureContext(OptionsResolver $resolver, array $options);
+    public function configureContext(OptionsResolver $resolver);
 }

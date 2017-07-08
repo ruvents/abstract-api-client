@@ -71,7 +71,7 @@ abstract class AbstractApiClient
         $eventDispatcher = $this->options['event_dispatcher'];
 
         foreach ($extensions as $extension) {
-            $extension->configureContext($this->contextResolver, $this->options);
+            $extension->configureContext($this->contextResolver);
             $eventDispatcher->addSubscriber($extension);
         }
 
