@@ -1,0 +1,21 @@
+<?php
+
+namespace Ruvents\AbstractApiClient\Event;
+
+final class ApiClientEvents
+{
+    /**
+     * @Event("Ruvents\AbstractApiClient\Event\PreSendEvent")
+     */
+    const PRE_SEND = 'ruvents.abstract_api_client.pre_send';
+
+    /**
+     * @Event("Ruvents\AbstractApiClient\Event\PostSendEvent")
+     */
+    const POST_SEND = 'ruvents.abstract_api_client.post_send';
+
+    /**
+     * @Event("Ruvents\AbstractApiClient\Event\PostDecodeEvent")
+     */
+    const POST_DECODE = 'ruvents.abstract_api_client.post_decode';
+}
