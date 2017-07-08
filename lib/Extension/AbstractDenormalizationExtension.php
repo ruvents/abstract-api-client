@@ -49,14 +49,11 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
         $context = $event->getContext();
         $data = $event->getData();
 
-        /** @var RequestInterface $request */
-        $request = $context['_request'];
-
         if (!$context['denormalize']) {
             return;
         }
 
-        $class = $context['class'] ?: $this->getClass($request);
+        $class = $context['class'] ?: $this->getClass($event->getRequest());
 
         $event->setData($this->denormalizer->denormalize($data, $class));
     }
