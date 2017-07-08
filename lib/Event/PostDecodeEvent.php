@@ -2,14 +2,16 @@
 
 namespace Ruvents\AbstractApiClient\Event;
 
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Ruvents\AbstractApiClient\Common\ContextRequestTrait;
+use Ruvents\AbstractApiClient\Common\ContextResponseTrait;
 use Ruvents\AbstractApiClient\Common\ContextTrait;
 use Symfony\Component\EventDispatcher\Event;
 
 class PostDecodeEvent extends Event
 {
     use ContextTrait;
+    use ContextRequestTrait;
+    use ContextResponseTrait;
 
     /**
      * @var mixed
@@ -20,22 +22,6 @@ class PostDecodeEvent extends Event
     {
         $this->context = $context;
         $this->data = $data;
-    }
-
-    /**
-     * @return RequestInterface
-     */
-    public function getRequest()
-    {
-        return $this->context['_request'];
-    }
-
-    /**
-     * @return ResponseInterface
-     */
-    public function getResponse()
-    {
-        return $this->context['_response'];
     }
 
     /**
