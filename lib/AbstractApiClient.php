@@ -4,6 +4,8 @@ namespace Ruvents\AbstractApiClient;
 
 use Http\Client\HttpClient;
 use Http\Discovery\HttpClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Event\ApiClientEvents;
@@ -15,14 +17,25 @@ use Ruvents\AbstractApiClient\Extension\ApiClientExtensionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\ImmutableEventDispatcher;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractApiClient
 {
     /**
+     * @var RequestFactory
+     */
+    protected $requestFactory;
+
+    /**
      * @var EventDispatcherInterface
      */
-    protected $dispatcher;
+    protected $eventDispatcher;
+
+    /**
+     * @var array
+     */
+    protected $facades;
 
     /**
      * @var array
@@ -42,31 +55,27 @@ abstract class AbstractApiClient
     /**
      * @param array                         $options
      * @param ApiClientExtensionInterface[] $extensions
-     * @param HttpClient|null               $httpClient
-     * @param EventDispatcherInterface|null $dispatcher
      */
-    public function __construct(
-        array $options,
-        array $extensions = [],
-        HttpClient $httpClient = null,
-        EventDispatcherInterface $dispatcher = null
-    ) {
-        $this->configureOptions($resolver = new OptionsResolver());
+    public function __construct(array $options, array $extensions = [])
+    {
+        $this->configureDependencies($resolver = new OptionsResolver());
+        $this->configureOptions($resolver);
         $this->options = $resolver->resolve($options);
 
-        $this->httpClient = $httpClient ?: HttpClientDiscovery::find();
+        $this->httpClient = $options['http_client'];
+        $this->requestFactory = $options['request_factory'];
 
         $this->contextResolver = new OptionsResolver();
         $this->configureContext($this->contextResolver);
 
-        $dispatcher = $dispatcher ?: new EventDispatcher();
+        $eventDispatcher = $options['event_dispatcher'];
 
         foreach ($extensions as $extension) {
             $extension->configureContext($this->contextResolver, $this->options);
-            $dispatcher->addSubscriber($extension);
+            $eventDispatcher->addSubscriber($extension);
         }
 
-        $this->dispatcher = new ImmutableEventDispatcher($dispatcher);
+        $this->eventDispatcher = new ImmutableEventDispatcher($eventDispatcher);
     }
 
     /**
@@ -82,7 +91,7 @@ abstract class AbstractApiClient
         $this->modifyRequest($request, $context);
 
         $preSendEvent = new PreSendEvent($context, $request);
-        $this->dispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
+        $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
 
         $request = $preSendEvent->getRequest();
         $response = $preSendEvent->getResponse() ?: $this->httpClient->sendRequest($request);
@@ -90,13 +99,13 @@ abstract class AbstractApiClient
         $this->validateResponse($response, $context);
 
         $postSendEvent = new PostSendEvent($context, $request, $response);
-        $this->dispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
+        $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
 
         $data = $this->decodeResponse($response, $context);
         $this->validateData($data, $context);
 
         $postDecodeEvent = new PostDecodeEvent($context, $request, $response, $data);
-        $this->dispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
+        $this->eventDispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
 
         return $postDecodeEvent->getData();
     }
@@ -122,10 +131,54 @@ abstract class AbstractApiClient
     abstract protected function validateData($data, array $context);
 
     /**
+     * @param string $class
+     *
+     * @return mixed
+     */
+    protected function getFacade($class)
+    {
+        if (!isset($this->facades[$class])) {
+            $this->facades[$class] = $this->createFacade($class);
+        }
+
+        return $this->facades[$class];
+    }
+
+    /**
+     * @param string $class
+     *
+     * @return mixed
+     */
+    protected function createFacade($class)
+    {
+        return new $class($this, $this->requestFactory);
+    }
+
+    /**
      * @return array
      */
     final protected function getOptions()
     {
         return $this->options;
+    }
+
+    private function configureDependencies(OptionsResolver $resolver)
+    {
+        /** @noinspection PhpUnusedParameterInspection */
+        $resolver
+            ->setDefaults([
+                'http_client' => function (Options $options) {
+                    return HttpClientDiscovery::find();
+                },
+                'request_factory' => function (Options $options) {
+                    return MessageFactoryDiscovery::find();
+                },
+                'event_dispatcher' => function (Options $options) {
+                    return new EventDispatcher();
+                },
+            ])
+            ->setAllowedTypes('http_client', 'Http\Client\HttpClient')
+            ->setAllowedTypes('request_factory', 'Http\Message\MessageFactory')
+            ->setAllowedTypes('event_dispatcher', 'Symfony\Component\EventDispatcher\EventDispatcherInterface');
     }
 }
