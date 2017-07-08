@@ -12,7 +12,6 @@ use Ruvents\AbstractApiClient\Event\ApiClientEvents;
 use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
-use Ruvents\AbstractApiClient\Exception\DecodeException;
 use Ruvents\AbstractApiClient\Extension\ApiClientExtensionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -87,24 +86,29 @@ abstract class AbstractApiClient
     final public function request(RequestInterface $request, array $context = [])
     {
         $context = $this->contextResolver->resolve($context);
+        $context['_options'] = $this->options;
+        $context['_time'] = new \DateTimeImmutable();
 
         $this->modifyRequest($request, $context);
 
         $preSendEvent = new PreSendEvent($context, $request);
         $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
 
-        $request = $preSendEvent->getRequest();
-        $response = $preSendEvent->getResponse() ?: $this->httpClient->sendRequest($request);
+        $context['_request'] = $preSendEvent->getRequest();
 
-        $this->validateResponse($response, $context);
+        if (null === $context['_response'] = $preSendEvent->getResponse()) {
+            $context['_response'] = $this->httpClient->sendRequest($context['_request']);
+        }
 
-        $postSendEvent = new PostSendEvent($context, $request, $response);
+        $this->validateResponse($context['_response'], $context);
+
+        $postSendEvent = new PostSendEvent($context);
         $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
 
-        $data = $this->decodeResponse($response, $context);
+        $data = $this->decodeResponse($context['_response'], $context);
         $this->validateData($data, $context);
 
-        $postDecodeEvent = new PostDecodeEvent($context, $request, $response, $data);
+        $postDecodeEvent = new PostDecodeEvent($context, $data);
         $this->eventDispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
 
         return $postDecodeEvent->getData();
@@ -116,18 +120,34 @@ abstract class AbstractApiClient
 
     abstract protected function modifyRequest(RequestInterface &$request, array $context);
 
+    /**
+     * @param ResponseInterface $response
+     * @param array             $context
+     *
+     * @return mixed
+     *
+     * @throws \Exception
+     */
     abstract protected function validateResponse(ResponseInterface $response, array $context);
 
     /**
      * @param ResponseInterface $response
      * @param array             $context
      *
-     * @throws DecodeException
-     *
      * @return mixed
+     *
+     * @throws \Exception
      */
     abstract protected function decodeResponse(ResponseInterface $response, array $context);
 
+    /**
+     * @param mixed $data
+     * @param array $context
+     *
+     * @return mixed
+     *
+     * @throws \Exception
+     */
     abstract protected function validateData($data, array $context);
 
     /**

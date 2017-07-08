@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Event;
+namespace Ruvents\AbstractApiClient\Common;
 
 trait ContextTrait
 {

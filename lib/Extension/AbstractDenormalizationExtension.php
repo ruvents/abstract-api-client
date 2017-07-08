@@ -28,8 +28,10 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
         $resolver
             ->setDefaults([
                 'denormalize' => true,
+                'class' => null,
             ])
-            ->setAllowedTypes('denormalize', 'bool');
+            ->setAllowedTypes('denormalize', 'bool')
+            ->setAllowedTypes('class', ['null', 'string']);
     }
 
     /**
@@ -45,16 +47,18 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
     public function denormalize(PostDecodeEvent $event)
     {
         $context = $event->getContext();
+        $data = $event->getData();
 
-        if (!$context['denormalize'] || null === $class = $this->getClass($event->getRequest())) {
+        /** @var RequestInterface $request */
+        $request = $context['_request'];
+
+        if (!$context['denormalize']) {
             return;
         }
 
-        $data = $event->getData();
+        $class = $context['class'] ?: $this->getClass($request);
 
-        if ($this->denormalizer->supportsDenormalization($data, $class)) {
-            $event->setData($this->denormalizer->denormalize($data, $class));
-        }
+        $event->setData($this->denormalizer->denormalize($data, $class));
     }
 
     /**

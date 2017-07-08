@@ -4,11 +4,17 @@ namespace Ruvents\AbstractApiClient\Event;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Ruvents\AbstractApiClient\Common\ContextTrait;
 use Symfony\Component\EventDispatcher\Event;
 
 class PreSendEvent extends Event
 {
-    use ContextTrait, RequestTrait;
+    use ContextTrait;
+
+    /**
+     * @var RequestInterface
+     */
+    private $request;
 
     /**
      * @var null|ResponseInterface
@@ -19,6 +25,14 @@ class PreSendEvent extends Event
     {
         $this->context = $context;
         $this->request = $request;
+    }
+
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest()
+    {
+        return $this->request;
     }
 
     public function setRequest(RequestInterface $request)
