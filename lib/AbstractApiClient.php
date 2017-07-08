@@ -62,13 +62,13 @@ abstract class AbstractApiClient
         $this->configureOptions($resolver);
         $this->options = $resolver->resolve($options);
 
-        $this->httpClient = $options['http_client'];
-        $this->requestFactory = $options['request_factory'];
+        $this->httpClient = $this->options['http_client'];
+        $this->requestFactory = $this->options['request_factory'];
 
         $this->contextResolver = new OptionsResolver();
         $this->configureContext($this->contextResolver);
 
-        $eventDispatcher = $options['event_dispatcher'];
+        $eventDispatcher = $this->options['event_dispatcher'];
 
         foreach ($extensions as $extension) {
             $extension->configureContext($this->contextResolver, $this->options);
