@@ -32,9 +32,6 @@ abstract class AbstractApiFacade
 
     protected function requestGet(array $context, $endpoint, array $params = [], array $headers = [])
     {
-        $context['_endpoint'] = $endpoint;
-        $context['_params'] = $params;
-
         $request = $this->requestFactory->createRequest('GET', $endpoint.'?'.http_build_query($params), $headers);
 
         return $this->client->request($request, $context);
@@ -42,9 +39,6 @@ abstract class AbstractApiFacade
 
     protected function requestPost(array $context, $endpoint, array $params = [], array $headers = [])
     {
-        $context['_endpoint'] = $endpoint;
-        $context['_params'] = $params;
-
         $request = $this->requestFactory->createRequest('POST', $endpoint, $headers, http_build_query($params));
 
         return $this->client->request($request, $context);
