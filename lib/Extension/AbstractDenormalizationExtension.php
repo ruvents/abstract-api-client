@@ -53,7 +53,7 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
             return;
         }
 
-        $class = $context['class'] ?: $this->getClass($event->getRequest());
+        $class = $context['class'] ?: $this->getClass($event->getRequest(), $context);
 
         if ($this->denormalizer->supportsDenormalization($data, $class)) {
             $event->setData($this->denormalizer->denormalize($data, $class));
@@ -63,5 +63,5 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
     /**
      * @return string|null
      */
-    abstract protected function getClass(RequestInterface $request);
+    abstract protected function getClass(RequestInterface $request, array $context);
 }
