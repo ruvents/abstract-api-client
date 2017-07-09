@@ -30,6 +30,14 @@ abstract class AbstractApiFacade
         return get_called_class();
     }
 
+    /**
+     * @param array  $context
+     * @param string $endpoint
+     * @param array  $params
+     * @param array  $headers
+     *
+     * @return mixed
+     */
     protected function requestGet(array $context, $endpoint, array $params = [], array $headers = [])
     {
         $context['endpoint'] = $endpoint;
@@ -40,6 +48,14 @@ abstract class AbstractApiFacade
         return $this->client->request($request, $context);
     }
 
+    /**
+     * @param array  $context
+     * @param string $endpoint
+     * @param array  $params
+     * @param array  $headers
+     *
+     * @return mixed
+     */
     protected function requestPost(array $context, $endpoint, array $params = [], array $headers = [])
     {
         $context['endpoint'] = $endpoint;
