@@ -30,14 +30,14 @@ abstract class AbstractApiFacade
         return get_called_class();
     }
 
-    protected function requestGet($endpoint, array $params, array $context, array $headers = [])
+    protected function requestGet(array $context, $endpoint, array $params = [], array $headers = [])
     {
         $request = $this->requestFactory->createRequest('GET', $endpoint.'?'.http_build_query($params), $headers);
 
         return $this->client->request($request, $context);
     }
 
-    protected function requestPost($endpoint, array $params, array $context, array $headers = [])
+    protected function requestPost(array $context, $endpoint, array $params = [], array $headers = [])
     {
         $request = $this->requestFactory->createRequest('POST', $endpoint, $headers, http_build_query($params));
 
