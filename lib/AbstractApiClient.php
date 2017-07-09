@@ -206,6 +206,7 @@ abstract class AbstractApiClient
 
     private function internalConfigureContext(OptionsResolver $resolver)
     {
+        /** @noinspection PhpUnusedParameterInspection */
         $resolver
             ->setRequired([
                 'options',
@@ -224,7 +225,7 @@ abstract class AbstractApiClient
             ])
             ->setAllowedTypes('endpoint', 'string')
             ->setAllowedTypes('params', 'array')
-            ->setNormalizer('endpoint', function ($endpoint) {
+            ->setNormalizer('endpoint', function (Options $options, $endpoint) {
                 return '/'.ltrim($endpoint, '/');
             });
     }
