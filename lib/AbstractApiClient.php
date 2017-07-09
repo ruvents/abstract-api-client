@@ -215,15 +215,10 @@ abstract class AbstractApiClient
                 'response',
             ])
             ->setDefaults([
-                'endpoint' => function (Options $options) {
-                    /** @var RequestInterface $request */
-                    $request = $options['request'];
-
-                    return $request->getUri()->getPath();
-                },
+                'endpoint' => null,
                 'params' => [],
             ])
-            ->setAllowedTypes('endpoint', 'string')
+            ->setAllowedTypes('endpoint', ['null', 'string'])
             ->setAllowedTypes('params', 'array')
             ->setNormalizer('endpoint', function (Options $options, $endpoint) {
                 return '/'.ltrim($endpoint, '/');
