@@ -11,7 +11,7 @@ trait ContextResponseTrait
      */
     public function getResponse()
     {
-        return $this->getContext()['_response'];
+        return $this->getContext()['response'];
     }
 
     /**

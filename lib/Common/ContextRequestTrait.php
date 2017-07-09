@@ -11,7 +11,7 @@ trait ContextRequestTrait
      */
     public function getRequest()
     {
-        return $this->getContext()['_request'];
+        return $this->getContext()['request'];
     }
 
     /**

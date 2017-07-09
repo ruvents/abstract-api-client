@@ -57,7 +57,7 @@ abstract class AbstractApiClient
      */
     public function __construct(array $options, array $extensions = [])
     {
-        $this->configureDependencies($resolver = new OptionsResolver());
+        $this->internalConfigureOptions($resolver = new OptionsResolver());
         $this->configureOptions($resolver);
         $this->options = $resolver->resolve($options);
 
@@ -65,6 +65,7 @@ abstract class AbstractApiClient
         $this->requestFactory = $this->options['request_factory'];
 
         $this->contextResolver = new OptionsResolver();
+        $this->internalConfigureContext($this->contextResolver);
         $this->configureContext($this->contextResolver);
 
         $eventDispatcher = $this->options['event_dispatcher'];
@@ -85,27 +86,28 @@ abstract class AbstractApiClient
      */
     final public function request(RequestInterface $request, array $context = [])
     {
+        $context['options'] = $this->options;
+        $context['time'] = new \DateTimeImmutable();
+        $context['request'] = $request;
+        $context['response'] = null;
         $context = $this->contextResolver->resolve($context);
-        $context['_options'] = $this->options;
-        $context['_time'] = new \DateTimeImmutable();
 
-        $this->modifyRequest($request, $context);
+        $this->modifyRequest($context['request'], $context);
 
-        $preSendEvent = new PreSendEvent($context, $request);
+        $preSendEvent = new PreSendEvent($context, $context['request']);
         $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
+        $context['request'] = $preSendEvent->getRequest();
 
-        $context['_request'] = $preSendEvent->getRequest();
-
-        if (null === $context['_response'] = $preSendEvent->getResponse()) {
-            $context['_response'] = $this->httpClient->sendRequest($context['_request']);
+        if (null === $context['response'] = $preSendEvent->getResponse()) {
+            $context['response'] = $this->httpClient->sendRequest($context['request']);
         }
 
-        $this->validateResponse($context['_response'], $context);
+        $this->validateResponse($context['response'], $context);
 
         $postSendEvent = new PostSendEvent($context);
         $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
 
-        $data = $this->decodeResponse($context['_response'], $context);
+        $data = $this->decodeResponse($context['response'], $context);
         $this->validateData($data, $context);
 
         $postDecodeEvent = new PostDecodeEvent($context, $data);
@@ -182,7 +184,7 @@ abstract class AbstractApiClient
         return $this->options;
     }
 
-    private function configureDependencies(OptionsResolver $resolver)
+    private function internalConfigureOptions(OptionsResolver $resolver)
     {
         /** @noinspection PhpUnusedParameterInspection */
         $resolver
@@ -200,5 +202,30 @@ abstract class AbstractApiClient
             ->setAllowedTypes('http_client', 'Http\Client\HttpClient')
             ->setAllowedTypes('request_factory', 'Http\Message\MessageFactory')
             ->setAllowedTypes('event_dispatcher', 'Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    }
+
+    private function internalConfigureContext(OptionsResolver $resolver)
+    {
+        $resolver
+            ->setRequired([
+                'options',
+                'time',
+                'request',
+                'response',
+            ])
+            ->setDefaults([
+                'endpoint' => function (Options $options) {
+                    /** @var RequestInterface $request */
+                    $request = $options['request'];
+
+                    return $request->getUri()->getPath();
+                },
+                'params' => [],
+            ])
+            ->setAllowedTypes('endpoint', 'string')
+            ->setAllowedTypes('params', 'array')
+            ->setNormalizer('endpoint', function ($endpoint) {
+                return '/'.ltrim($endpoint, '/');
+            });
     }
 }
