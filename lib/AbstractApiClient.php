@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
 use Ruvents\AbstractApiClient\Exception\ErrorEventException;
-use Ruvents\AbstractApiClient\Extension\ApiExtensionInterface;
+use Ruvents\AbstractApiClient\Extension\ApiClientExtensionInterface;
 use Ruvents\AbstractApiClient\Service\ApiServiceInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -33,7 +33,7 @@ abstract class AbstractApiClient
 
     /**
      * @param array                         $defaultContext
-     * @param ApiExtensionInterface[]       $extensions
+     * @param ApiClientExtensionInterface[] $extensions
      * @param null|EventDispatcherInterface $eventDispatcher
      */
     public function __construct(

@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
-abstract class AbstractDenormalizationExtension implements ApiExtensionInterface
+abstract class AbstractDenormalizationExtension implements ApiClientExtensionInterface
 {
     /**
      * @var DenormalizerInterface
