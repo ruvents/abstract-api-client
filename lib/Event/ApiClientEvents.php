@@ -18,4 +18,9 @@ final class ApiClientEvents
      * @Event("Ruvents\AbstractApiClient\Event\PostDecodeEvent")
      */
     const POST_DECODE = 'ruvents.abstract_api_client.post_decode';
+
+    /**
+     * @Event("Ruvents\AbstractApiClient\Event\ErrorEvent")
+     */
+    const ERROR = 'ruvents.abstract_api_client.error';
 }

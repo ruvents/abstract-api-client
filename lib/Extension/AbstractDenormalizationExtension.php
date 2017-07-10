@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
-abstract class AbstractDenormalizationExtension implements ApiClientExtensionInterface
+abstract class AbstractDenormalizationExtension implements ApiExtensionInterface
 {
     /**
      * @var DenormalizerInterface
@@ -55,7 +55,7 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
 
         $class = $context['class'] ?: $this->getClass($event->getRequest(), $context);
 
-        if ($this->denormalizer->supportsDenormalization($data, $class)) {
+        if (null !== $class && $this->denormalizer->supportsDenormalization($data, $class)) {
             $event->setData($this->denormalizer->denormalize($data, $class));
         }
     }

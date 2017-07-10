@@ -2,226 +2,123 @@
 
 namespace Ruvents\AbstractApiClient;
 
-use Http\Client\HttpClient;
-use Http\Discovery\HttpClientDiscovery;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Message\RequestFactory;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Event\ApiClientEvents;
+use Ruvents\AbstractApiClient\Event\ErrorEvent;
 use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
-use Ruvents\AbstractApiClient\Extension\ApiClientExtensionInterface;
+use Ruvents\AbstractApiClient\Exception\ErrorEventException;
+use Ruvents\AbstractApiClient\Extension\ApiExtensionInterface;
+use Ruvents\AbstractApiClient\Service\ApiServiceInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\ImmutableEventDispatcher;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractApiClient
 {
-    /**
-     * @var RequestFactory
-     */
-    protected $requestFactory;
-
-    /**
-     * @var EventDispatcherInterface
-     */
-    protected $eventDispatcher;
-
-    /**
-     * @var array
-     */
-    protected $facades;
-
-    /**
-     * @var array
-     */
-    private $options;
-
-    /**
-     * @var HttpClient
-     */
-    private $httpClient;
-
     /**
      * @var OptionsResolver
      */
     private $contextResolver;
 
     /**
-     * @param array                         $options
-     * @param ApiClientExtensionInterface[] $extensions
+     * @var array
      */
-    public function __construct(array $options, array $extensions = [])
-    {
-        $this->internalConfigureOptions($resolver = new OptionsResolver());
-        $this->configureOptions($resolver);
-        $this->options = $resolver->resolve($options);
+    private $defaultContext;
 
-        $this->httpClient = $this->options['http_client'];
-        $this->requestFactory = $this->options['request_factory'];
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
 
+    /**
+     * @param array                         $defaultContext
+     * @param ApiExtensionInterface[]       $extensions
+     * @param null|EventDispatcherInterface $eventDispatcher
+     */
+    public function __construct(
+        array $defaultContext = [],
+        array $extensions = [],
+        EventDispatcherInterface $eventDispatcher = null
+    ) {
+        $this->defaultContext = $defaultContext;
+        $this->eventDispatcher = $eventDispatcher ?: new EventDispatcher();
         $this->contextResolver = new OptionsResolver();
-        $this->internalConfigureContext($this->contextResolver);
-        $this->configureContext($this->contextResolver);
 
-        $eventDispatcher = $this->options['event_dispatcher'];
+        $this->getService()->configureContext($this->contextResolver);
 
         foreach ($extensions as $extension) {
+            $this->eventDispatcher->addSubscriber($extension);
             $extension->configureContext($this->contextResolver);
-            $eventDispatcher->addSubscriber($extension);
         }
-
-        $this->eventDispatcher = new ImmutableEventDispatcher($eventDispatcher);
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array            $context
-     *
-     * @return mixed
-     */
-    final public function request(RequestInterface $request, array $context = [])
-    {
-        $context['options'] = $this->options;
-        $context['time'] = new \DateTimeImmutable();
-        $context['request'] = $request;
-        $context['response'] = null;
-        $context = $this->contextResolver->resolve($context);
-
-        $this->modifyRequest($context['request'], $context);
-
-        $preSendEvent = new PreSendEvent($context, $context['request']);
-        $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
-        $context['request'] = $preSendEvent->getRequest();
-
-        if (null === $context['response'] = $preSendEvent->getResponse()) {
-            $context['response'] = $this->httpClient->sendRequest($context['request']);
-        }
-
-        $this->validateResponse($context['response'], $context);
-
-        $postSendEvent = new PostSendEvent($context);
-        $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
-
-        $data = $this->decodeResponse($context['response'], $context);
-        $this->validateData($data, $context);
-
-        $postDecodeEvent = new PostDecodeEvent($context, $data);
-        $this->eventDispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
-
-        return $postDecodeEvent->getData();
-    }
-
-    abstract protected function configureOptions(OptionsResolver $resolver);
-
-    abstract protected function configureContext(OptionsResolver $resolver);
-
-    abstract protected function modifyRequest(RequestInterface &$request, array $context);
-
-    /**
-     * @param ResponseInterface $response
-     * @param array             $context
-     *
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    abstract protected function validateResponse(ResponseInterface $response, array $context);
-
-    /**
-     * @param ResponseInterface $response
-     * @param array             $context
-     *
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    abstract protected function decodeResponse(ResponseInterface $response, array $context);
-
-    /**
-     * @param mixed $data
      * @param array $context
      *
      * @return mixed
-     *
      * @throws \Exception
      */
-    abstract protected function validateData($data, array $context);
-
-    /**
-     * @param string $class
-     *
-     * @return mixed
-     */
-    protected function getFacade($class)
+    final public function request(array $context = [])
     {
-        if (!isset($this->facades[$class])) {
-            $this->facades[$class] = $this->createFacade($class);
+        try {
+            // resolve context
+            $context = array_replace($this->defaultContext, $context);
+            $context = $this->contextResolver->resolve($context);
+
+            // define array offsets
+            $context['request'] = $this->getService()->createRequest($context);
+            $context['response'] = null;
+            $context['data'] = null;
+
+            // dispatch PRE_SEND event
+            $preSendEvent = new PreSendEvent($context);
+            $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
+            $context = $preSendEvent->getContext();
+
+            // terminate if data was set
+            if (null !== $context['data']) {
+                return $context['data'];
+            }
+
+            // make http request
+            $context['response'] = $this->getService()->sendRequest($context['request'], $context);
+
+            // dispatch POST_SEND event
+            $postSendEvent = new PostSendEvent($context);
+            $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
+
+            // validate response
+            $this->getService()->validateResponse($context['response'], $context);
+
+            // decode response
+            $context['data'] = $this->getService()->decodeResponse($context['response'], $context);
+
+            // validate data
+            $this->getService()->validateData($context['data'], $context);
+
+            // dispatch POST_DECODE event
+            $postDecodeEvent = new PostDecodeEvent($context);
+            $this->eventDispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
+            $context = $postDecodeEvent->getContext();
+
+            return $context['data'];
+        } catch (ErrorEventException $exception) {
+            // dispatch ERROR event
+            $errorEvent = new ErrorEvent($exception);
+            $this->eventDispatcher->dispatch(ApiClientEvents::ERROR, $errorEvent);
+
+            // return valid data if it was provided
+            if (null !== $data = $errorEvent->getValidData()) {
+                return $data;
+            }
+
+            throw $errorEvent->getException();
         }
-
-        return $this->facades[$class];
     }
 
     /**
-     * @param string $class
-     *
-     * @return mixed
+     * @return ApiServiceInterface
      */
-    protected function createFacade($class)
-    {
-        return new $class($this, $this->requestFactory);
-    }
-
-    /**
-     * @return array
-     */
-    final protected function getOptions()
-    {
-        return $this->options;
-    }
-
-    private function internalConfigureOptions(OptionsResolver $resolver)
-    {
-        /** @noinspection PhpUnusedParameterInspection */
-        $resolver
-            ->setDefaults([
-                'http_client' => function (Options $options) {
-                    return HttpClientDiscovery::find();
-                },
-                'request_factory' => function (Options $options) {
-                    return MessageFactoryDiscovery::find();
-                },
-                'event_dispatcher' => function (Options $options) {
-                    return new EventDispatcher();
-                },
-            ])
-            ->setAllowedTypes('http_client', 'Http\Client\HttpClient')
-            ->setAllowedTypes('request_factory', 'Http\Message\MessageFactory')
-            ->setAllowedTypes('event_dispatcher', 'Symfony\Component\EventDispatcher\EventDispatcherInterface');
-    }
-
-    private function internalConfigureContext(OptionsResolver $resolver)
-    {
-        /** @noinspection PhpUnusedParameterInspection */
-        $resolver
-            ->setRequired([
-                'options',
-                'time',
-                'request',
-                'response',
-            ])
-            ->setDefaults([
-                'endpoint' => null,
-                'params' => [],
-            ])
-            ->setAllowedTypes('endpoint', ['null', 'string'])
-            ->setAllowedTypes('params', 'array')
-            ->setNormalizer('endpoint', function (Options $options, $endpoint) {
-                return '/'.ltrim($endpoint, '/');
-            });
-    }
+    abstract protected function getService();
 }
