@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Exception\RequestException;
 
-trait HttpClientTrait
+trait HttpClientDiscoveryTrait
 {
     /**
      * @var HttpClient
