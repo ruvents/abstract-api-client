@@ -8,7 +8,6 @@ use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
 use Ruvents\AbstractApiClient\Exception\ErrorEventException;
-use Ruvents\AbstractApiClient\Extension\ApiClientAwareInterface;
 use Ruvents\AbstractApiClient\Extension\ExtensionInterface;
 use Ruvents\AbstractApiClient\Service\ServiceInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -47,20 +46,16 @@ abstract class AbstractApiClient implements ApiClientInterface
         $this->contextResolver = new OptionsResolver();
 
         $this->getService()->configureContext($this->contextResolver);
-        $this->contextResolver
-            ->setDefaults([
-                'request' => null,
-                'response' => null,
-                'data' => null,
-            ]);
+        $this->contextResolver->setDefaults([
+            'api_client' => null,
+            'request' => null,
+            'response' => null,
+            'data' => null,
+        ]);
 
         foreach ($extensions as $extension) {
             $this->eventDispatcher->addSubscriber($extension);
             $extension->configureContext($this->contextResolver);
-
-            if ($extension instanceof ApiClientAwareInterface) {
-                $extension->setApiClient($this);
-            }
         }
     }
 
@@ -74,13 +69,13 @@ abstract class AbstractApiClient implements ApiClientInterface
     {
         try {
             // resolve context
-            $context = array_replace($this->defaultContext, $context);
+            $context = array_replace($this->defaultContext, $context, [
+                'api_client' => $this,
+                'request' => $this->getService()->createRequest($context),
+                'response' => null,
+                'data' => null,
+            ]);
             $context = $this->contextResolver->resolve($context);
-
-            // reset context offsets
-            $context['request'] = $this->getService()->createRequest($context);
-            $context['response'] = null;
-            $context['data'] = null;
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($context);
