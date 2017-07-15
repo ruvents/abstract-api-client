@@ -71,11 +71,12 @@ abstract class AbstractApiClient implements ApiClientInterface
             // resolve context
             $context = array_replace($this->defaultContext, $context, [
                 'api_client' => $this,
-                'request' => $this->getService()->createRequest($context),
+                'request' => null,
                 'response' => null,
                 'data' => null,
             ]);
             $context = $this->contextResolver->resolve($context);
+            $context['request'] = $this->getService()->createRequest($context);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($context);
