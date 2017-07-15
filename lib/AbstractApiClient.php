@@ -2,19 +2,20 @@
 
 namespace Ruvents\AbstractApiClient;
 
-use Ruvents\AbstractApiClient\Event\ApiClientEvents;
 use Ruvents\AbstractApiClient\Event\ErrorEvent;
+use Ruvents\AbstractApiClient\Event\Events;
 use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
 use Ruvents\AbstractApiClient\Exception\ErrorEventException;
-use Ruvents\AbstractApiClient\Extension\ApiClientExtensionInterface;
-use Ruvents\AbstractApiClient\Service\ApiServiceInterface;
+use Ruvents\AbstractApiClient\Extension\ApiClientAwareInterface;
+use Ruvents\AbstractApiClient\Extension\ExtensionInterface;
+use Ruvents\AbstractApiClient\Service\ServiceInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-abstract class AbstractApiClient
+abstract class AbstractApiClient implements ApiClientInterface
 {
     /**
      * @var OptionsResolver
@@ -33,7 +34,7 @@ abstract class AbstractApiClient
 
     /**
      * @param array                         $defaultContext
-     * @param ApiClientExtensionInterface[] $extensions
+     * @param ExtensionInterface[]          $extensions
      * @param null|EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
@@ -46,10 +47,20 @@ abstract class AbstractApiClient
         $this->contextResolver = new OptionsResolver();
 
         $this->getService()->configureContext($this->contextResolver);
+        $this->contextResolver
+            ->setDefaults([
+                'request' => null,
+                'response' => null,
+                'data' => null,
+            ]);
 
         foreach ($extensions as $extension) {
             $this->eventDispatcher->addSubscriber($extension);
             $extension->configureContext($this->contextResolver);
+
+            if ($extension instanceof ApiClientAwareInterface) {
+                $extension->setApiClient($this);
+            }
         }
     }
 
@@ -59,21 +70,21 @@ abstract class AbstractApiClient
      * @return mixed
      * @throws \Exception
      */
-    final public function request(array $context = [])
+    public function request(array $context = [])
     {
         try {
             // resolve context
             $context = array_replace($this->defaultContext, $context);
             $context = $this->contextResolver->resolve($context);
 
-            // define array offsets
+            // reset context offsets
             $context['request'] = $this->getService()->createRequest($context);
             $context['response'] = null;
             $context['data'] = null;
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($context);
-            $this->eventDispatcher->dispatch(ApiClientEvents::PRE_SEND, $preSendEvent);
+            $this->eventDispatcher->dispatch(Events::PRE_SEND, $preSendEvent);
             $context = $preSendEvent->getContext();
 
             // terminate if data was set
@@ -86,7 +97,7 @@ abstract class AbstractApiClient
 
             // dispatch POST_SEND event
             $postSendEvent = new PostSendEvent($context);
-            $this->eventDispatcher->dispatch(ApiClientEvents::POST_SEND, $postSendEvent);
+            $this->eventDispatcher->dispatch(Events::POST_SEND, $postSendEvent);
 
             // validate response
             $this->getService()->validateResponse($context['response'], $context);
@@ -99,14 +110,14 @@ abstract class AbstractApiClient
 
             // dispatch POST_DECODE event
             $postDecodeEvent = new PostDecodeEvent($context);
-            $this->eventDispatcher->dispatch(ApiClientEvents::POST_DECODE, $postDecodeEvent);
+            $this->eventDispatcher->dispatch(Events::POST_DECODE, $postDecodeEvent);
             $context = $postDecodeEvent->getContext();
 
             return $context['data'];
         } catch (ErrorEventException $exception) {
             // dispatch ERROR event
             $errorEvent = new ErrorEvent($exception);
-            $this->eventDispatcher->dispatch(ApiClientEvents::ERROR, $errorEvent);
+            $this->eventDispatcher->dispatch(Events::ERROR, $errorEvent);
 
             // return valid data if it was provided
             if (null !== $data = $errorEvent->getValidData()) {
@@ -118,7 +129,7 @@ abstract class AbstractApiClient
     }
 
     /**
-     * @return ApiServiceInterface
+     * @return ServiceInterface
      */
     abstract protected function getService();
 }

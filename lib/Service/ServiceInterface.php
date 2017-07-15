@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Exception;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-interface ApiServiceInterface
+interface ServiceInterface
 {
     /**
      * @param OptionsResolver $resolver

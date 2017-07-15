@@ -3,12 +3,12 @@
 namespace Ruvents\AbstractApiClient\Extension;
 
 use Psr\Http\Message\RequestInterface;
-use Ruvents\AbstractApiClient\Event\ApiClientEvents;
+use Ruvents\AbstractApiClient\Event\Events;
 use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
-abstract class AbstractDenormalizationExtension implements ApiClientExtensionInterface
+abstract class AbstractDenormalizationExtension implements ExtensionInterface
 {
     /**
      * @var DenormalizerInterface
@@ -40,10 +40,13 @@ abstract class AbstractDenormalizationExtension implements ApiClientExtensionInt
     public static function getSubscribedEvents()
     {
         return [
-            ApiClientEvents::POST_DECODE => 'denormalize',
+            Events::POST_DECODE => 'denormalize',
         ];
     }
 
+    /**
+     * @param PostDecodeEvent $event
+     */
     public function denormalize(PostDecodeEvent $event)
     {
         $context = $event->getContext();
