@@ -32,17 +32,13 @@ abstract class AbstractApiClient implements ApiClientInterface
     private $eventDispatcher;
 
     /**
-     * @param array                         $defaultContext
-     * @param ExtensionInterface[]          $extensions
-     * @param null|EventDispatcherInterface $eventDispatcher
+     * @param array                $defaultContext
+     * @param ExtensionInterface[] $extensions
      */
-    public function __construct(
-        array $defaultContext = [],
-        array $extensions = [],
-        EventDispatcherInterface $eventDispatcher = null
-    ) {
+    public function __construct(array $defaultContext = [], array $extensions = [])
+    {
         $this->defaultContext = $defaultContext;
-        $this->eventDispatcher = $eventDispatcher ?: new EventDispatcher();
+        $this->eventDispatcher = new EventDispatcher();
         $this->contextResolver = new OptionsResolver();
 
         $this->getService()->configureContext($this->contextResolver);
