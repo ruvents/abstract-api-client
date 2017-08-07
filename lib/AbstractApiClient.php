@@ -17,6 +17,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 abstract class AbstractApiClient implements ApiClientInterface
 {
     /**
+     * @var ServiceInterface
+     */
+    private $service;
+
+    /**
      * @var OptionsResolver
      */
     private $contextResolver;
@@ -32,16 +37,18 @@ abstract class AbstractApiClient implements ApiClientInterface
     private $eventDispatcher;
 
     /**
+     * @param ServiceInterface     $service
      * @param array                $defaultContext
      * @param ExtensionInterface[] $extensions
      */
-    public function __construct(array $defaultContext = [], array $extensions = [])
+    public function __construct(ServiceInterface $service, array $defaultContext = [], array $extensions = [])
     {
+        $this->service = $service;
         $this->defaultContext = $defaultContext;
         $this->eventDispatcher = new EventDispatcher();
         $this->contextResolver = new OptionsResolver();
 
-        $this->getService()->configureContext($this->contextResolver);
+        $this->service->configureContext($this->contextResolver);
         $this->contextResolver->setDefaults([
             'api_client' => null,
             'request' => null,
@@ -72,7 +79,7 @@ abstract class AbstractApiClient implements ApiClientInterface
                 'data' => null,
             ]);
             $context = $this->contextResolver->resolve($context);
-            $context['request'] = $this->getService()->createRequest($context);
+            $context['request'] = $this->service->createRequest($context);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($context);
@@ -85,20 +92,20 @@ abstract class AbstractApiClient implements ApiClientInterface
             }
 
             // make http request
-            $context['response'] = $this->getService()->sendRequest($context['request'], $context);
+            $context['response'] = $this->service->sendRequest($context['request'], $context);
 
             // dispatch POST_SEND event
             $postSendEvent = new PostSendEvent($context);
             $this->eventDispatcher->dispatch(Events::POST_SEND, $postSendEvent);
 
             // validate response
-            $this->getService()->validateResponse($context['response'], $context);
+            $this->service->validateResponse($context['response'], $context);
 
             // decode response
-            $context['data'] = $this->getService()->decodeResponse($context['response'], $context);
+            $context['data'] = $this->service->decodeResponse($context['response'], $context);
 
             // validate data
-            $this->getService()->validateData($context['data'], $context);
+            $this->service->validateData($context['data'], $context);
 
             // dispatch POST_DECODE event
             $postDecodeEvent = new PostDecodeEvent($context);
@@ -123,5 +130,8 @@ abstract class AbstractApiClient implements ApiClientInterface
     /**
      * @return ServiceInterface
      */
-    abstract protected function getService();
+    final protected function getService()
+    {
+        return $this->service;
+    }
 }
