@@ -49,12 +49,7 @@ abstract class AbstractApiClient implements ApiClientInterface
         $this->contextResolver = new OptionsResolver();
 
         $this->service->configureContext($this->contextResolver);
-        $this->contextResolver->setDefaults([
-            'api_client' => null,
-            'request' => null,
-            'response' => null,
-            'data' => null,
-        ]);
+        $this->contextResolver->setDefined(['api_client', 'request', 'response', 'data']);
 
         foreach ($extensions as $extension) {
             $this->eventDispatcher->addSubscriber($extension);
@@ -71,14 +66,7 @@ abstract class AbstractApiClient implements ApiClientInterface
     public function request(array $context = [])
     {
         try {
-            // resolve context
-            $context = array_replace($this->defaultContext, $context, [
-                'api_client' => $this,
-                'request' => null,
-                'response' => null,
-                'data' => null,
-            ]);
-            $context = $this->contextResolver->resolve($context);
+            $context = $this->resolveContext($context);
             $context['request'] = $this->service->createRequest($context);
 
             // dispatch PRE_SEND event
@@ -125,6 +113,23 @@ abstract class AbstractApiClient implements ApiClientInterface
 
             throw $errorEvent->getException();
         }
+    }
+
+    /**
+     * @param array $context
+     *
+     * @return array
+     */
+    final protected function resolveContext(array $context)
+    {
+        $context = array_replace($this->defaultContext, $context, [
+            'api_client' => $this,
+            'request' => null,
+            'response' => null,
+            'data' => null,
+        ]);
+
+        return $this->contextResolver->resolve($context);
     }
 
     /**
