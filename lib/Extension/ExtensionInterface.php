@@ -7,5 +7,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 interface ExtensionInterface extends EventSubscriberInterface
 {
-    public function configureContext(OptionsResolver $resolver);
+    /**
+     * @param OptionsResolver $resolver
+     */
+    public function configureRequestContext(OptionsResolver $resolver);
 }

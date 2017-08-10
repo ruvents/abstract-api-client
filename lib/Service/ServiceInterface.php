@@ -12,7 +12,12 @@ interface ServiceInterface
     /**
      * @param OptionsResolver $resolver
      */
-    public function configureContext(OptionsResolver $resolver);
+    public function configureOptions(OptionsResolver $resolver);
+
+    /**
+     * @param OptionsResolver $resolver
+     */
+    public function configureRequestContext(OptionsResolver $resolver);
 
     /**
      * @param array $context
