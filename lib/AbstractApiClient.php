@@ -18,7 +18,6 @@ abstract class AbstractApiClient implements ApiClientInterface
 {
     const CONTEXT_API_CLIENT = 'api_client';
     const CONTEXT_DATA = 'data';
-    const CONTEXT_OPTIONS = 'options';
     const CONTEXT_REQUEST = 'request';
     const CONTEXT_RESPONSE = 'response';
 
@@ -30,7 +29,7 @@ abstract class AbstractApiClient implements ApiClientInterface
     /**
      * @var array
      */
-    private $options;
+    private $defaultContext;
 
     /**
      * @var OptionsResolver
@@ -44,34 +43,33 @@ abstract class AbstractApiClient implements ApiClientInterface
 
     /**
      * @param ServiceInterface     $service
-     * @param array                $options
+     * @param array                $defaultContext
      * @param ExtensionInterface[] $extensions
      */
-    public function __construct(ServiceInterface $service, array $options = [], array $extensions = [])
+    public function __construct(ServiceInterface $service, array $defaultContext = [], array $extensions = [])
     {
         $this->service = $service;
-
-        // configure options
-        $optionsResolver = new OptionsResolver();
-        $this->service->configureOptions($optionsResolver);
-        $this->options = $optionsResolver->resolve($options);
-
-        // configure context
-        $this->contextResolver = new OptionsResolver();
-        $this->service->configureRequestContext($this->contextResolver, $this->options);
-        $this->contextResolver->setDefined([
-            self::CONTEXT_API_CLIENT,
-            self::CONTEXT_DATA,
-            self::CONTEXT_OPTIONS,
-            self::CONTEXT_REQUEST,
-            self::CONTEXT_RESPONSE,
-        ]);
-
         $this->eventDispatcher = new EventDispatcher();
+
+        // configure default context
+        $this->contextResolver = (new OptionsResolver())
+            ->setDefault(self::CONTEXT_API_CLIENT, $this);
+        $this->service->configureDefaultContext($this->contextResolver);
+        $this->defaultContext = $this->contextResolver->resolve($defaultContext);
+
+        // configure request context
+        $this->contextResolver
+            ->setDefaults($this->defaultContext)
+            ->setDefined([
+                self::CONTEXT_DATA,
+                self::CONTEXT_REQUEST,
+                self::CONTEXT_RESPONSE,
+            ]);
+        $this->service->configureRequestContext($this->contextResolver);
 
         // register extensions
         foreach ($extensions as $extension) {
-            $extension->configureRequestContext($this->contextResolver, $this->options);
+            $extension->configureRequestContext($this->contextResolver);
             $this->eventDispatcher->addSubscriber($extension);
         }
     }
@@ -86,9 +84,7 @@ abstract class AbstractApiClient implements ApiClientInterface
     {
         try {
             // resolve context
-            $context = $this->setImmutableContextValues($context);
             $context = $this->contextResolver->resolve($context);
-            $context = $this->setImmutableContextValues($context);
             $context[self::CONTEXT_REQUEST] = $this->service->createRequest($context, $this);
 
             // dispatch PRE_SEND event
@@ -150,21 +146,8 @@ abstract class AbstractApiClient implements ApiClientInterface
     /**
      * @return array
      */
-    protected function getOptions()
+    protected function getDefaultContext()
     {
-        return $this->options;
-    }
-
-    /**
-     * @param array $context
-     *
-     * @return array
-     */
-    private function setImmutableContextValues(array $context)
-    {
-        return array_replace($context, [
-            self::CONTEXT_API_CLIENT => $this,
-            self::CONTEXT_OPTIONS => $this->options,
-        ]);
+        return $this->defaultContext;
     }
 }

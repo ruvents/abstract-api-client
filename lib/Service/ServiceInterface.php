@@ -15,15 +15,14 @@ interface ServiceInterface
      *
      * @return void
      */
-    public function configureOptions(OptionsResolver $resolver);
+    public function configureDefaultContext(OptionsResolver $resolver);
 
     /**
      * @param OptionsResolver $resolver
-     * @param array           $options
      *
      * @return void
      */
-    public function configureRequestContext(OptionsResolver $resolver, array $options);
+    public function configureRequestContext(OptionsResolver $resolver);
 
     /**
      * @param array              $context

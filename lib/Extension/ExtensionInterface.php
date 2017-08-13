@@ -9,9 +9,8 @@ interface ExtensionInterface extends EventSubscriberInterface
 {
     /**
      * @param OptionsResolver $resolver
-     * @param array           $options
      *
      * @return void
      */
-    public function configureRequestContext(OptionsResolver $resolver, array $options);
+    public function configureRequestContext(OptionsResolver $resolver);
 }
