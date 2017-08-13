@@ -59,12 +59,11 @@ abstract class AbstractApiClient implements ApiClientInterface
 
         // configure request context
         $this->contextResolver
-            ->setDefaults($this->defaultContext)
-            ->setDefined([
-                self::CONTEXT_DATA,
-                self::CONTEXT_REQUEST,
-                self::CONTEXT_RESPONSE,
-            ]);
+            ->setDefaults(array_merge($this->defaultContext, [
+                self::CONTEXT_DATA => null,
+                self::CONTEXT_REQUEST => null,
+                self::CONTEXT_RESPONSE => null,
+            ]));
         $this->service->configureRequestContext($this->contextResolver);
 
         // register extensions
