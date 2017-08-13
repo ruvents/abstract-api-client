@@ -2,6 +2,9 @@
 
 namespace Ruvents\AbstractApiClient\Common;
 
+use Ruvents\AbstractApiClient\AbstractApiClient;
+use Ruvents\AbstractApiClient\ApiClientInterface;
+
 trait ContextTrait
 {
     /**
@@ -12,8 +15,16 @@ trait ContextTrait
     /**
      * @return array
      */
-    public function getContext()
+    final public function getContext()
     {
         return $this->context;
+    }
+
+    /**
+     * @return ApiClientInterface
+     */
+    final public function getApiClient()
+    {
+        return $this->context[AbstractApiClient::CONTEXT_API_CLIENT];
     }
 }

@@ -3,15 +3,16 @@
 namespace Ruvents\AbstractApiClient\Common;
 
 use Psr\Http\Message\ResponseInterface;
+use Ruvents\AbstractApiClient\AbstractApiClient;
 
 trait ContextResponseTrait
 {
     /**
      * @return ResponseInterface
      */
-    public function getResponse()
+    final public function getResponse()
     {
-        return $this->getContext()['response'];
+        return $this->getContext()[AbstractApiClient::CONTEXT_RESPONSE];
     }
 
     /**

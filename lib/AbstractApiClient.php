@@ -16,6 +16,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractApiClient implements ApiClientInterface
 {
+    const CONTEXT_API_CLIENT = 'api_client';
+    const CONTEXT_DATA = 'data';
+    const CONTEXT_OPTIONS = 'options';
+    const CONTEXT_REQUEST = 'request';
+    const CONTEXT_RESPONSE = 'response';
+
     /**
      * @var ServiceInterface
      */
@@ -45,20 +51,27 @@ abstract class AbstractApiClient implements ApiClientInterface
     {
         $this->service = $service;
 
+        // configure options
         $optionsResolver = new OptionsResolver();
         $this->service->configureOptions($optionsResolver);
         $this->options = $optionsResolver->resolve($options);
 
+        // configure context
         $this->contextResolver = new OptionsResolver();
-        $this->service->configureRequestContext($this->contextResolver);
-        $this->contextResolver
-            ->setDefined($optionsResolver->getDefinedOptions())
-            ->setDefined(['api_client', 'data', 'request', 'response']);
+        $this->service->configureRequestContext($this->contextResolver, $this->options);
+        $this->contextResolver->setDefined([
+            self::CONTEXT_API_CLIENT,
+            self::CONTEXT_DATA,
+            self::CONTEXT_OPTIONS,
+            self::CONTEXT_REQUEST,
+            self::CONTEXT_RESPONSE,
+        ]);
 
         $this->eventDispatcher = new EventDispatcher();
 
+        // register extensions
         foreach ($extensions as $extension) {
-            $extension->configureRequestContext($this->contextResolver);
+            $extension->configureRequestContext($this->contextResolver, $this->options);
             $this->eventDispatcher->addSubscriber($extension);
         }
     }
@@ -73,10 +86,10 @@ abstract class AbstractApiClient implements ApiClientInterface
     {
         try {
             // resolve context
-            $context = $this->applyImmutableContextValues($context);
+            $context = $this->setImmutableContextValues($context);
             $context = $this->contextResolver->resolve($context);
-            $context = $this->applyImmutableContextValues($context);
-            $context['request'] = $this->service->createRequest($context);
+            $context = $this->setImmutableContextValues($context);
+            $context[self::CONTEXT_REQUEST] = $this->service->createRequest($context, $this);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($context);
@@ -84,32 +97,34 @@ abstract class AbstractApiClient implements ApiClientInterface
             $context = $preSendEvent->getContext();
 
             // terminate if data was set
-            if (null !== $context['data']) {
-                return $context['data'];
+            if (null !== $context[self::CONTEXT_DATA]) {
+                return $context[self::CONTEXT_DATA];
             }
 
             // make http request
-            $context['response'] = $this->service->sendRequest($context['request'], $context);
+            $context[self::CONTEXT_RESPONSE] = $this->service
+                ->sendRequest($context[self::CONTEXT_REQUEST], $context);
 
             // dispatch POST_SEND event
             $postSendEvent = new PostSendEvent($context);
             $this->eventDispatcher->dispatch(Events::POST_SEND, $postSendEvent);
 
             // validate response
-            $this->service->validateResponse($context['response'], $context);
+            $this->service->validateResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // decode response
-            $context['data'] = $this->service->decodeResponse($context['response'], $context);
+            $context[self::CONTEXT_DATA] = $this->service
+                ->decodeResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // validate data
-            $this->service->validateData($context['data'], $context);
+            $this->service->validateData($context[self::CONTEXT_DATA], $context);
 
             // dispatch POST_DECODE event
             $postDecodeEvent = new PostDecodeEvent($context);
             $this->eventDispatcher->dispatch(Events::POST_DECODE, $postDecodeEvent);
             $context = $postDecodeEvent->getContext();
 
-            return $context['data'];
+            return $context[self::CONTEXT_DATA];
         } catch (ErrorEventException $exception) {
             // dispatch ERROR event
             $errorEvent = new ErrorEvent($exception);
@@ -125,14 +140,6 @@ abstract class AbstractApiClient implements ApiClientInterface
     }
 
     /**
-     * @return array
-     */
-    public function getOptions()
-    {
-        return $this->options;
-    }
-
-    /**
      * @return ServiceInterface
      */
     protected function getService()
@@ -141,14 +148,23 @@ abstract class AbstractApiClient implements ApiClientInterface
     }
 
     /**
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return $this->options;
+    }
+
+    /**
      * @param array $context
      *
      * @return array
      */
-    private function applyImmutableContextValues(array $context)
+    private function setImmutableContextValues(array $context)
     {
-        return array_replace($context, $this->options, [
-            'api_client' => $this,
+        return array_replace($context, [
+            self::CONTEXT_API_CLIENT => $this,
+            self::CONTEXT_OPTIONS => $this->options,
         ]);
     }
 }

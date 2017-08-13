@@ -4,6 +4,7 @@ namespace Ruvents\AbstractApiClient\Service;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Ruvents\AbstractApiClient\ApiClientInterface;
 use Ruvents\AbstractApiClient\Exception;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -11,20 +12,26 @@ interface ServiceInterface
 {
     /**
      * @param OptionsResolver $resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver);
 
     /**
      * @param OptionsResolver $resolver
+     * @param array           $options
+     *
+     * @return void
      */
-    public function configureRequestContext(OptionsResolver $resolver);
+    public function configureRequestContext(OptionsResolver $resolver, array $options);
 
     /**
-     * @param array $context
+     * @param array              $context
+     * @param ApiClientInterface $client
      *
      * @return RequestInterface
      */
-    public function createRequest(array $context);
+    public function createRequest(array $context, ApiClientInterface $client);
 
     /**
      * @param RequestInterface $request
@@ -39,6 +46,7 @@ interface ServiceInterface
      * @param ResponseInterface $response
      * @param array             $context
      *
+     * @return void
      * @throws Exception\ResponseException
      */
     public function validateResponse(ResponseInterface $response, array $context);
@@ -56,6 +64,7 @@ interface ServiceInterface
      * @param mixed $data
      * @param array $context
      *
+     * @return void
      * @throws Exception\ApiException
      */
     public function validateData($data, array $context);

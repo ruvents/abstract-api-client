@@ -2,14 +2,16 @@
 
 namespace Ruvents\AbstractApiClient\Common;
 
+use Ruvents\AbstractApiClient\AbstractApiClient;
+
 trait ContextDataTrait
 {
     /**
      * @return mixed
      */
-    public function getData()
+    final public function getData()
     {
-        return $this->getContext()['data'];
+        return $this->getContext()[AbstractApiClient::CONTEXT_DATA];
     }
 
     /**
