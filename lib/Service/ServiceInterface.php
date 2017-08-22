@@ -6,9 +6,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\ApiClientInterface;
 use Ruvents\AbstractApiClient\Exception;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-interface ServiceInterface
+interface ServiceInterface extends EventSubscriberInterface
 {
     /**
      * @param OptionsResolver $resolver

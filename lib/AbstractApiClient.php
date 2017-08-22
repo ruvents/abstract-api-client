@@ -50,6 +50,7 @@ abstract class AbstractApiClient implements ApiClientInterface
     {
         $this->service = $service;
         $this->eventDispatcher = new EventDispatcher();
+        $this->eventDispatcher->addSubscriber($this->service);
 
         // configure default context
         $this->contextResolver = (new OptionsResolver())
