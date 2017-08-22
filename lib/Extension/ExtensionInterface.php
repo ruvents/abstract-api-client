@@ -12,5 +12,12 @@ interface ExtensionInterface extends EventSubscriberInterface
      *
      * @return void
      */
+    public function configureDefaultContext(OptionsResolver $resolver);
+
+    /**
+     * @param OptionsResolver $resolver
+     *
+     * @return void
+     */
     public function configureRequestContext(OptionsResolver $resolver);
 }
