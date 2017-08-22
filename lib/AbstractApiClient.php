@@ -55,6 +55,9 @@ abstract class AbstractApiClient implements ApiClientInterface
         $this->contextResolver = (new OptionsResolver())
             ->setDefault(self::CONTEXT_API_CLIENT, $this);
         $this->service->configureDefaultContext($this->contextResolver);
+        foreach ($extensions as $extension) {
+            $extension->configureDefaultContext($this->contextResolver);
+        }
         $this->defaultContext = $this->contextResolver->resolve($defaultContext);
 
         // configure request context
