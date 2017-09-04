@@ -2,7 +2,7 @@
 
 namespace Ruvents\AbstractApiClient\Event;
 
-final class Events
+final class ApiClientEvents
 {
     /**
      * @Event("Ruvents\AbstractApiClient\Event\PreSendEvent")
