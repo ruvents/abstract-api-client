@@ -9,9 +9,9 @@ trait ContextDataTrait
     /**
      * @return mixed
      */
-    final public function getData()
+    final public function getResponseData()
     {
-        return $this->getContext()[AbstractApiClient::CONTEXT_DATA];
+        return $this->getContext()[AbstractApiClient::CONTEXT_RESPONSE_DATA];
     }
 
     /**

@@ -16,10 +16,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractApiClient implements ApiClientInterface
 {
-    const CONTEXT_API_CLIENT = 'api_client';
-    const CONTEXT_DATA = 'data';
-    const CONTEXT_REQUEST = 'request';
-    const CONTEXT_RESPONSE = 'response';
+    const CONTEXT_API_CLIENT = '_api_client';
+    const CONTEXT_REQUEST = '_request';
+    const CONTEXT_RESPONSE = '_response';
+    const CONTEXT_RESPONSE_DATA = '_response_data';
 
     /**
      * @var ServiceInterface
@@ -64,9 +64,9 @@ abstract class AbstractApiClient implements ApiClientInterface
         // configure request context
         $this->contextResolver
             ->setDefaults(array_merge($this->defaultContext, [
-                self::CONTEXT_DATA => null,
                 self::CONTEXT_REQUEST => null,
                 self::CONTEXT_RESPONSE => null,
+                self::CONTEXT_RESPONSE_DATA => null,
             ]));
         $this->service->configureRequestContext($this->contextResolver);
 
@@ -96,8 +96,8 @@ abstract class AbstractApiClient implements ApiClientInterface
             $context = $preSendEvent->getContext();
 
             // terminate if data was set
-            if (null !== $context[self::CONTEXT_DATA]) {
-                return $context[self::CONTEXT_DATA];
+            if (null !== $context[self::CONTEXT_RESPONSE_DATA]) {
+                return $context[self::CONTEXT_RESPONSE_DATA];
             }
 
             // make http request
@@ -112,18 +112,18 @@ abstract class AbstractApiClient implements ApiClientInterface
             $this->service->validateResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // decode response
-            $context[self::CONTEXT_DATA] = $this->service
+            $context[self::CONTEXT_RESPONSE_DATA] = $this->service
                 ->decodeResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // validate data
-            $this->service->validateData($context[self::CONTEXT_DATA], $context);
+            $this->service->validateData($context[self::CONTEXT_RESPONSE_DATA], $context);
 
             // dispatch POST_DECODE event
             $postDecodeEvent = new PostDecodeEvent($context);
             $this->eventDispatcher->dispatch(Events::POST_DECODE, $postDecodeEvent);
             $context = $postDecodeEvent->getContext();
 
-            return $context[self::CONTEXT_DATA];
+            return $context[self::CONTEXT_RESPONSE_DATA];
         } catch (ErrorEventException $exception) {
             // dispatch ERROR event
             $errorEvent = new ErrorEvent($exception);

@@ -22,10 +22,9 @@ class PreSendEvent extends Event
         $this->context[AbstractApiClient::CONTEXT_REQUEST] = $request;
     }
 
-    public function setData($data)
+    public function setResponseData($responseData)
     {
-        $this->context[AbstractApiClient::CONTEXT_DATA] = $data;
-
+        $this->context[AbstractApiClient::CONTEXT_RESPONSE_DATA] = $responseData;
         $this->stopPropagation();
     }
 }

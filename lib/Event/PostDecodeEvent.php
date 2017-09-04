@@ -19,10 +19,10 @@ class PostDecodeEvent extends Event
     }
 
     /**
-     * @param mixed $data
+     * @param mixed $responseData
      */
-    public function setData($data)
+    public function setResponseData($responseData)
     {
-        $this->context[AbstractApiClient::CONTEXT_DATA] = $data;
+        $this->context[AbstractApiClient::CONTEXT_RESPONSE_DATA] = $responseData;
     }
 }
