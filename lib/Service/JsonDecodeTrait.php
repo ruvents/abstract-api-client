@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Exception\DecodeException;
 trait JsonDecodeTrait
 {
     /**
-     * @see ServiceInterface::decodeResponse()
+     * @see ApiServiceInterface::decodeResponse()
      *
      * @param ResponseInterface $response
      * @param array             $context

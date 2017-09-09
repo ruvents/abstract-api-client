@@ -11,7 +11,7 @@ class PostDecodeEvent extends Event
     use Common\ContextTrait;
     use Common\ContextRequestTrait;
     use Common\ContextResponseTrait;
-    use Common\ContextDataTrait;
+    use Common\ContextResponseDataTrait;
 
     public function __construct(array $context)
     {

@@ -4,7 +4,7 @@ namespace Ruvents\AbstractApiClient\Exception;
 
 use Ruvents\AbstractApiClient\Common;
 
-class ResponseException extends ErrorEventException
+class ResponseException extends ApiException
 {
     use Common\ContextRequestTrait;
     use Common\ContextResponseTrait;

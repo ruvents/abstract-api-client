@@ -4,7 +4,7 @@ namespace Ruvents\AbstractApiClient\Common;
 
 use Ruvents\AbstractApiClient\AbstractApiClient;
 
-trait ContextDataTrait
+trait ContextResponseDataTrait
 {
     /**
      * @return mixed

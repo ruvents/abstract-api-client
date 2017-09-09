@@ -3,18 +3,17 @@
 namespace Ruvents\AbstractApiClient\Event;
 
 use Ruvents\AbstractApiClient\Common;
-use Ruvents\AbstractApiClient\Exception\ErrorEventException;
+use Ruvents\AbstractApiClient\Exception\ApiExceptionInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 class ErrorEvent extends Event
 {
-    use Common\ContextTrait;
     use Common\ContextRequestTrait;
     use Common\ContextResponseTrait;
-    use Common\ContextDataTrait;
+    use Common\ContextResponseDataTrait;
 
     /**
-     * @var \Exception
+     * @var ApiExceptionInterface
      */
     private $exception;
 
@@ -23,14 +22,21 @@ class ErrorEvent extends Event
      */
     private $validData;
 
-    public function __construct(ErrorEventException $exception)
+    public function __construct(ApiExceptionInterface $exception)
     {
-        $this->context = $exception->getContext();
-        $this->exception = $exception;
+        $this->setException($exception);
     }
 
     /**
-     * @return \Exception
+     * {@inheritdoc}
+     */
+    public function getContext()
+    {
+        return $this->exception->getContext();
+    }
+
+    /**
+     * @return ApiExceptionInterface
      */
     public function getException()
     {
@@ -38,9 +44,9 @@ class ErrorEvent extends Event
     }
 
     /**
-     * @param \Exception $exception
+     * @param ApiExceptionInterface $exception
      */
-    public function setException(\Exception $exception)
+    public function setException(ApiExceptionInterface $exception)
     {
         $this->exception = $exception;
     }
@@ -59,7 +65,6 @@ class ErrorEvent extends Event
     public function setValidData($validData)
     {
         $this->validData = $validData;
-
         $this->stopPropagation();
     }
 }

@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Exception\ResponseException;
 trait Response200Trait
 {
     /**
-     * @see ServiceInterface::validateResponse()
+     * @see ApiServiceInterface::validateResponse()
      *
      * @param ResponseInterface $response
      * @param array             $context

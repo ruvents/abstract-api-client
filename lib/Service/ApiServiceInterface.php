@@ -9,7 +9,7 @@ use Ruvents\AbstractApiClient\Exception;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-interface ServiceInterface extends EventSubscriberInterface
+interface ApiServiceInterface extends EventSubscriberInterface
 {
     /**
      * @param OptionsResolver $resolver
@@ -65,7 +65,7 @@ interface ServiceInterface extends EventSubscriberInterface
      * @param array $context
      *
      * @return void
-     * @throws Exception\ApiException
+     * @throws Exception\ApiExceptionInterface
      */
     public function validateData($data, array $context);
 }

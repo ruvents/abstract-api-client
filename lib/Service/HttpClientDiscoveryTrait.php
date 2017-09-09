@@ -17,7 +17,7 @@ trait HttpClientDiscoveryTrait
     private $httpClient;
 
     /**
-     * @see ServiceInterface::sendRequest()
+     * @see ApiServiceInterface::sendRequest()
      *
      * @param RequestInterface $request
      * @param array            $context

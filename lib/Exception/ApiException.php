@@ -2,11 +2,15 @@
 
 namespace Ruvents\AbstractApiClient\Exception;
 
-use Ruvents\AbstractApiClient\Common;
+use Ruvents\AbstractApiClient\Common\ContextTrait;
 
-class ApiException extends ErrorEventException
+class ApiException extends \RuntimeException implements ApiExceptionInterface
 {
-    use Common\ContextRequestTrait;
-    use Common\ContextResponseTrait;
-    use Common\ContextDataTrait;
+    use ContextTrait;
+
+    public function __construct(array $context, $message = '', $code = 0, \Exception $previous = null)
+    {
+        $this->context = $context;
+        parent::__construct($message, $code, $previous);
+    }
 }
