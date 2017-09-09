@@ -14,7 +14,7 @@ trait HttpClientDiscoveryTrait
     /**
      * @var HttpClient
      */
-    private $httpClient;
+    protected $httpClient;
 
     /**
      * @see ApiServiceInterface::sendRequest()
