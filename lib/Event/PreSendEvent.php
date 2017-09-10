@@ -5,17 +5,10 @@ namespace Ruvents\AbstractApiClient\Event;
 use Psr\Http\Message\RequestInterface;
 use Ruvents\AbstractApiClient\AbstractApiClient;
 use Ruvents\AbstractApiClient\Common;
-use Symfony\Component\EventDispatcher\Event;
 
-class PreSendEvent extends Event
+class PreSendEvent extends AbstractEvent
 {
-    use Common\ContextTrait;
     use Common\ContextRequestTrait;
-
-    public function __construct(array $context)
-    {
-        $this->context = $context;
-    }
 
     public function setRequest(RequestInterface $request)
     {

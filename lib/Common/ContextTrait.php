@@ -7,7 +7,7 @@ trait ContextTrait
     /**
      * @var array
      */
-    private $context;
+    protected $context;
 
     /**
      * @return array

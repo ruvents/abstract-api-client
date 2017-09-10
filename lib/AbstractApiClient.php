@@ -89,7 +89,7 @@ abstract class AbstractApiClient implements ApiClientInterface
             $context[self::CONTEXT_REQUEST] = $this->service->createRequest($context, $this);
 
             // dispatch PRE_SEND event
-            $preSendEvent = new PreSendEvent($context);
+            $preSendEvent = new PreSendEvent($this, $context);
             $this->eventDispatcher->dispatch(ApiEvents::PRE_SEND, $preSendEvent);
             $context = $preSendEvent->getContext();
 
@@ -103,7 +103,7 @@ abstract class AbstractApiClient implements ApiClientInterface
                 ->sendRequest($context[self::CONTEXT_REQUEST], $context);
 
             // dispatch POST_SEND event
-            $postSendEvent = new PostSendEvent($context);
+            $postSendEvent = new PostSendEvent($this, $context);
             $this->eventDispatcher->dispatch(ApiEvents::POST_SEND, $postSendEvent);
 
             // validate response
@@ -117,14 +117,14 @@ abstract class AbstractApiClient implements ApiClientInterface
             $this->service->validateData($context[self::CONTEXT_RESPONSE_DATA], $context);
 
             // dispatch POST_DECODE event
-            $postDecodeEvent = new PostDecodeEvent($context);
+            $postDecodeEvent = new PostDecodeEvent($this, $context);
             $this->eventDispatcher->dispatch(ApiEvents::POST_DECODE, $postDecodeEvent);
             $context = $postDecodeEvent->getContext();
 
             return $context[self::CONTEXT_RESPONSE_DATA];
         } catch (ApiExceptionInterface $exception) {
             // dispatch ERROR event
-            $errorEvent = new ErrorEvent($exception);
+            $errorEvent = new ErrorEvent($this, $exception);
             $this->eventDispatcher->dispatch(ApiEvents::ERROR, $errorEvent);
 
             // return valid data if it was provided

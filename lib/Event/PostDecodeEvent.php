@@ -4,19 +4,12 @@ namespace Ruvents\AbstractApiClient\Event;
 
 use Ruvents\AbstractApiClient\AbstractApiClient;
 use Ruvents\AbstractApiClient\Common;
-use Symfony\Component\EventDispatcher\Event;
 
-class PostDecodeEvent extends Event
+class PostDecodeEvent extends AbstractEvent
 {
-    use Common\ContextTrait;
     use Common\ContextRequestTrait;
     use Common\ContextResponseTrait;
     use Common\ContextResponseDataTrait;
-
-    public function __construct(array $context)
-    {
-        $this->context = $context;
-    }
 
     /**
      * @param mixed $responseData
