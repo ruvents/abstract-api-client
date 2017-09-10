@@ -24,4 +24,12 @@ abstract class AbstractEvent extends Event
         $this->client = $client;
         $this->context = $context;
     }
+
+    /**
+     * @return ApiClientInterface
+     */
+    public function getClient()
+    {
+        return $this->client;
+    }
 }
