@@ -83,10 +83,11 @@ abstract class AbstractApiClient implements ApiClientInterface
         try {
             // resolve context
             $context = array_merge($this->contextResolver->resolve($context), [
-                self::CONTEXT_REQUEST => $this->service->createRequest($context, $this),
+                self::CONTEXT_REQUEST => null,
                 self::CONTEXT_RESPONSE => null,
                 self::CONTEXT_RESPONSE_DATA => null,
             ]);
+            $context[self::CONTEXT_REQUEST] = $this->service->createRequest($context, $this);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($this, $context);
