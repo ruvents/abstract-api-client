@@ -12,7 +12,7 @@ use Ruvents\AbstractApiClient\Exception\RequestException;
 trait HttpClientDiscoveryTrait
 {
     /**
-     * @var HttpClient
+     * @var null|HttpClient
      */
     protected $httpClient;
 
@@ -27,14 +27,22 @@ trait HttpClientDiscoveryTrait
      */
     public function sendRequest(RequestInterface $request, array $context)
     {
-        if (!isset($this->httpClient)) {
-            $this->httpClient = HttpClientDiscovery::find();
-        }
-
         try {
-            return $this->httpClient->sendRequest($request);
+            return $this->getHttpClient()->sendRequest($request);
         } catch (Exception $exception) {
             throw new RequestException($context, 'Failed to process request', 0, $exception);
         }
+    }
+
+    /**
+     * @return HttpClient
+     */
+    protected function getHttpClient()
+    {
+        if (null === $this->httpClient) {
+            $this->httpClient = HttpClientDiscovery::find();
+        }
+
+        return $this->httpClient;
     }
 }
