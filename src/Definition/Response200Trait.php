@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Service;
+namespace Ruvents\AbstractApiClient\Definition;
 
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Exception\ResponseException;
@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Exception\ResponseException;
 trait Response200Trait
 {
     /**
-     * @see ApiServiceInterface::validateResponse()
+     * @see ApiDefinitionInterface::validateResponse()
      *
      * @param ResponseInterface $response
      * @param array             $context

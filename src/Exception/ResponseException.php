@@ -4,7 +4,7 @@ namespace Ruvents\AbstractApiClient\Exception;
 
 use Ruvents\AbstractApiClient\Common;
 
-class DecodeException extends ApiException
+class ResponseException extends AbstractException
 {
     use Common\ContextRequestTrait;
     use Common\ContextResponseTrait;

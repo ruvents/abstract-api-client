@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Service;
+namespace Ruvents\AbstractApiClient\Definition;
 
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\Exception\DecodeException;
@@ -8,7 +8,7 @@ use Ruvents\AbstractApiClient\Exception\DecodeException;
 trait JsonDecodeTrait
 {
     /**
-     * @see ApiServiceInterface::decodeResponse()
+     * @see ApiDefinitionInterface::decodeResponse()
      *
      * @param ResponseInterface $response
      * @param array             $context

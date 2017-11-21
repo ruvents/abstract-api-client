@@ -2,14 +2,14 @@
 
 namespace Ruvents\AbstractApiClient;
 
+use Ruvents\AbstractApiClient\Definition\ApiDefinitionInterface;
+use Ruvents\AbstractApiClient\Definition\ApiExtensionInterface;
 use Ruvents\AbstractApiClient\Event\ApiEvents;
 use Ruvents\AbstractApiClient\Event\ErrorEvent;
 use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
 use Ruvents\AbstractApiClient\Exception\ApiExceptionInterface;
-use Ruvents\AbstractApiClient\Extension\ApiExtensionInterface;
-use Ruvents\AbstractApiClient\Service\ApiServiceInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -21,9 +21,9 @@ abstract class AbstractApiClient implements ApiClientInterface
     const CONTEXT_RESPONSE_DATA = '_response_data';
 
     /**
-     * @var ApiServiceInterface
+     * @var ApiDefinitionInterface
      */
-    private $service;
+    private $definition;
 
     /**
      * @var array
@@ -41,19 +41,19 @@ abstract class AbstractApiClient implements ApiClientInterface
     private $eventDispatcher;
 
     /**
-     * @param ApiServiceInterface     $service
+     * @param ApiDefinitionInterface  $definition
      * @param array                   $defaultContext
      * @param ApiExtensionInterface[] $extensions
      */
-    public function __construct(ApiServiceInterface $service, array $defaultContext = [], array $extensions = [])
+    public function __construct(ApiDefinitionInterface $definition, array $defaultContext = [], array $extensions = [])
     {
-        $this->service = $service;
+        $this->definition = $definition;
         $this->eventDispatcher = new EventDispatcher();
-        $this->eventDispatcher->addSubscriber($this->service);
+        $this->eventDispatcher->addSubscriber($this->definition);
 
         // configure default context
         $this->contextResolver = new OptionsResolver();
-        $this->service->configureDefaultContext($this->contextResolver);
+        $this->definition->configureDefaultContext($this->contextResolver);
         foreach ($extensions as $extension) {
             $extension->configureDefaultContext($this->contextResolver);
         }
@@ -63,7 +63,7 @@ abstract class AbstractApiClient implements ApiClientInterface
         $this->contextResolver
             ->setDefined([self::CONTEXT_REQUEST, self::CONTEXT_RESPONSE, self::CONTEXT_RESPONSE_DATA])
             ->setDefaults($this->defaultContext);
-        $this->service->configureRequestContext($this->contextResolver);
+        $this->definition->configureRequestContext($this->contextResolver);
 
         // register extensions
         foreach ($extensions as $extension) {
@@ -87,7 +87,7 @@ abstract class AbstractApiClient implements ApiClientInterface
                 self::CONTEXT_RESPONSE => null,
                 self::CONTEXT_RESPONSE_DATA => null,
             ]);
-            $context[self::CONTEXT_REQUEST] = $this->service->createRequest($context, $this);
+            $context[self::CONTEXT_REQUEST] = $this->definition->createRequest($context, $this);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($this, $context);
@@ -100,7 +100,7 @@ abstract class AbstractApiClient implements ApiClientInterface
             }
 
             // make http request
-            $context[self::CONTEXT_RESPONSE] = $this->service
+            $context[self::CONTEXT_RESPONSE] = $this->definition
                 ->sendRequest($context[self::CONTEXT_REQUEST], $context);
 
             // dispatch POST_SEND event
@@ -108,14 +108,14 @@ abstract class AbstractApiClient implements ApiClientInterface
             $this->eventDispatcher->dispatch(ApiEvents::POST_SEND, $postSendEvent);
 
             // validate response
-            $this->service->validateResponse($context[self::CONTEXT_RESPONSE], $context);
+            $this->definition->validateResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // decode response
-            $context[self::CONTEXT_RESPONSE_DATA] = $this->service
+            $context[self::CONTEXT_RESPONSE_DATA] = $this->definition
                 ->decodeResponse($context[self::CONTEXT_RESPONSE], $context);
 
             // validate data
-            $this->service->validateData($context[self::CONTEXT_RESPONSE_DATA], $context);
+            $this->definition->validateData($context[self::CONTEXT_RESPONSE_DATA], $context);
 
             // dispatch POST_DECODE event
             $postDecodeEvent = new PostDecodeEvent($this, $context);
@@ -138,11 +138,11 @@ abstract class AbstractApiClient implements ApiClientInterface
     }
 
     /**
-     * @return ApiServiceInterface
+     * @return ApiDefinitionInterface
      */
-    protected function getService()
+    protected function getDefinition()
     {
-        return $this->service;
+        return $this->definition;
     }
 
     /**

@@ -11,7 +11,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Ruvents\\AbstractApiClient\\": "lib/"
+            "Ruvents\\AbstractApiClient\\": "src/"
         }
     },
     "require": {
@@ -26,7 +26,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.18-dev"
+            "dev-master": "0.19-dev"
         }
     }
 }

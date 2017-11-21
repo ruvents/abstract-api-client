@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Service;
+namespace Ruvents\AbstractApiClient\Definition;
 
 use Http\Client\Exception;
 use Http\Client\HttpClient;
@@ -17,7 +17,7 @@ trait HttpClientDiscoveryTrait
     protected $httpClient;
 
     /**
-     * @see ApiServiceInterface::sendRequest()
+     * @see ApiDefinitionInterface::sendRequest()
      *
      * @param RequestInterface $request
      * @param array            $context

@@ -4,7 +4,7 @@ namespace Ruvents\AbstractApiClient\Exception;
 
 use Ruvents\AbstractApiClient\Common\ContextTrait;
 
-class ApiException extends \RuntimeException implements ApiExceptionInterface
+abstract class AbstractException extends \RuntimeException implements ApiExceptionInterface
 {
     use ContextTrait;
 

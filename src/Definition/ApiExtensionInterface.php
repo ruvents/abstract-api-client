@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Extension;
+namespace Ruvents\AbstractApiClient\Definition;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;

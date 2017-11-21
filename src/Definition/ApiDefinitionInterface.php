@@ -1,6 +1,6 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Service;
+namespace Ruvents\AbstractApiClient\Definition;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -9,7 +9,7 @@ use Ruvents\AbstractApiClient\Exception;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-interface ApiServiceInterface extends EventSubscriberInterface
+interface ApiDefinitionInterface extends EventSubscriberInterface
 {
     /**
      * @param OptionsResolver $resolver
@@ -65,7 +65,7 @@ interface ApiServiceInterface extends EventSubscriberInterface
      * @param array $context
      *
      * @return void
-     * @throws Exception\ApiExceptionInterface
+     * @throws Exception\ServiceException
      */
     public function validateData($data, array $context);
 }
