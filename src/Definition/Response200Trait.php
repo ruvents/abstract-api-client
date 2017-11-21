@@ -18,7 +18,7 @@ trait Response200Trait
     public function validateResponse(ResponseInterface $response, array $context)
     {
         if (200 !== $code = $response->getStatusCode()) {
-            throw new ResponseException(sprintf('Server responded with status code %d.', $code), $code);
+            throw new ResponseException($response, sprintf('Server responded with status code %d.', $code));
         }
     }
 }
