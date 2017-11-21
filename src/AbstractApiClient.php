@@ -2,6 +2,7 @@
 
 namespace Ruvents\AbstractApiClient;
 
+use Http\Client\Exception as HttpClientException;
 use Http\Client\HttpClient;
 use Http\Discovery\HttpClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
@@ -16,6 +17,7 @@ use Ruvents\AbstractApiClient\Event\PostDecodeEvent;
 use Ruvents\AbstractApiClient\Event\PostSendEvent;
 use Ruvents\AbstractApiClient\Event\PreSendEvent;
 use Ruvents\AbstractApiClient\Exception\ApiExceptionInterface;
+use Ruvents\AbstractApiClient\Exception\RequestException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -127,9 +129,13 @@ abstract class AbstractApiClient implements ApiClientInterface
                 return $context[self::CONTEXT_RESPONSE_DATA];
             }
 
-            // make http request
-            $context[self::CONTEXT_RESPONSE] = $this->httpClient
-                ->sendRequest($context[self::CONTEXT_REQUEST]);
+            // send request
+            try {
+                $context[self::CONTEXT_RESPONSE] = $this->httpClient
+                    ->sendRequest($context[self::CONTEXT_REQUEST]);
+            } catch (HttpClientException $exception) {
+                throw new RequestException($context, 'Failed to process request.', 0, $exception);
+            }
 
             // dispatch POST_SEND event
             $postSendEvent = new PostSendEvent($this, $context);
