@@ -134,7 +134,7 @@ abstract class AbstractApiClient implements ApiClientInterface
                 $context[self::CONTEXT_RESPONSE] = $this->httpClient
                     ->sendRequest($context[self::CONTEXT_REQUEST]);
             } catch (HttpClientException $exception) {
-                throw new RequestException('Failed to process request.', 0, $exception);
+                throw new RequestException($context[self::CONTEXT_REQUEST], 'Failed to process request.', 0, $exception);
             }
 
             // dispatch POST_SEND event

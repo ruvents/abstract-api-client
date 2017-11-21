@@ -12,7 +12,7 @@ class ResponseException extends \RuntimeException implements ApiExceptionInterfa
      */
     private $response;
 
-    public function __construct(ResponseInterface $response, $message = "", $code = 0, Throwable $previous = null)
+    public function __construct(ResponseInterface $response, $message = '', $code = 0, Throwable $previous = null)
     {
         $this->response = $response;
         parent::__construct($message, $code, $previous);
