@@ -2,6 +2,8 @@
 
 namespace Ruvents\AbstractApiClient\Definition;
 
+use Http\Message\RequestFactory;
+use Http\Message\UriFactory;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Ruvents\AbstractApiClient\ApiClientInterface;
@@ -26,21 +28,14 @@ interface ApiDefinitionInterface extends EventSubscriberInterface
     public function configureRequestContext(OptionsResolver $resolver);
 
     /**
+     * @param RequestFactory     $requestFactory
+     * @param UriFactory         $uriFactory
      * @param array              $context
      * @param ApiClientInterface $client
      *
      * @return RequestInterface
      */
-    public function createRequest(array $context, ApiClientInterface $client);
-
-    /**
-     * @param RequestInterface $request
-     * @param array            $context
-     *
-     * @return ResponseInterface
-     * @throws Exception\RequestException
-     */
-    public function sendRequest(RequestInterface $request, array $context);
+    public function createRequest(UriFactory $uriFactory, RequestFactory $requestFactory, ApiClientInterface $client, array $context);
 
     /**
      * @param ResponseInterface $response

@@ -2,6 +2,12 @@
 
 namespace Ruvents\AbstractApiClient;
 
+use Http\Client\HttpClient;
+use Http\Discovery\HttpClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\MessageFactory;
+use Http\Message\UriFactory;
 use Ruvents\AbstractApiClient\Definition\ApiDefinitionInterface;
 use Ruvents\AbstractApiClient\Definition\ApiExtensionInterface;
 use Ruvents\AbstractApiClient\Event\ApiEvents;
@@ -19,6 +25,21 @@ abstract class AbstractApiClient implements ApiClientInterface
     const CONTEXT_REQUEST = '_request';
     const CONTEXT_RESPONSE = '_response';
     const CONTEXT_RESPONSE_DATA = '_response_data';
+
+    /**
+     * @var UriFactory
+     */
+    protected $uriFactory;
+
+    /**
+     * @var MessageFactory
+     */
+    protected $requestFactory;
+
+    /**
+     * @var HttpClient
+     */
+    protected $httpClient;
 
     /**
      * @var ApiDefinitionInterface
@@ -70,6 +91,10 @@ abstract class AbstractApiClient implements ApiClientInterface
             $extension->configureRequestContext($this->contextResolver);
             $this->eventDispatcher->addSubscriber($extension);
         }
+
+        $this->uriFactory = UriFactoryDiscovery::find();
+        $this->requestFactory = MessageFactoryDiscovery::find();
+        $this->httpClient = HttpClientDiscovery::find();
     }
 
     /**
@@ -87,7 +112,10 @@ abstract class AbstractApiClient implements ApiClientInterface
                 self::CONTEXT_RESPONSE => null,
                 self::CONTEXT_RESPONSE_DATA => null,
             ]);
-            $context[self::CONTEXT_REQUEST] = $this->definition->createRequest($context, $this);
+
+            // create request
+            $context[self::CONTEXT_REQUEST] = $this->definition
+                ->createRequest($this->uriFactory, $this->requestFactory, $this, $context);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($this, $context);
@@ -100,8 +128,8 @@ abstract class AbstractApiClient implements ApiClientInterface
             }
 
             // make http request
-            $context[self::CONTEXT_RESPONSE] = $this->definition
-                ->sendRequest($context[self::CONTEXT_REQUEST], $context);
+            $context[self::CONTEXT_RESPONSE] = $this->httpClient
+                ->sendRequest($context[self::CONTEXT_REQUEST]);
 
             // dispatch POST_SEND event
             $postSendEvent = new PostSendEvent($this, $context);

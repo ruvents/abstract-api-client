@@ -15,14 +15,18 @@
         }
     },
     "require": {
-        "php": "^5.4 || ^7.0",
+        "php": "^5.5 || ^7.0",
+        "php-http/client-implementation": "^1.0",
+        "php-http/discovery": "^1.0",
+        "php-http/httplug": "^1.0",
+        "php-http/message": "^1.0",
         "psr/http-message": "^1.0",
         "symfony/event-dispatcher": "^2.8 || ^3.0 || ^4.0",
         "symfony/options-resolver": "^2.8 || ^3.0 || ^4.0"
     },
     "require-dev": {
-        "php-http/discovery": "^1.0",
-        "php-http/httplug": "^1.0"
+        "guzzlehttp/psr7": "^1.0",
+        "php-http/guzzle6-adapter": "^1.1"
     },
     "extra": {
         "branch-alias": {
