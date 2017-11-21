@@ -3,17 +3,19 @@
 namespace Ruvents\AbstractApiClient\Event;
 
 use Ruvents\AbstractApiClient\ApiClientInterface;
-use Ruvents\AbstractApiClient\Common\ContextTrait;
 use Symfony\Component\EventDispatcher\Event;
 
 abstract class AbstractEvent extends Event
 {
-    use ContextTrait;
-
     /**
      * @var ApiClientInterface
      */
     private $client;
+
+    /**
+     * @var array
+     */
+    protected $context;
 
     /**
      * @param ApiClientInterface $client
@@ -31,5 +33,13 @@ abstract class AbstractEvent extends Event
     public function getClient()
     {
         return $this->client;
+    }
+
+    /**
+     * @return array
+     */
+    public function getContext()
+    {
+        return $this->context;
     }
 }

@@ -2,9 +2,6 @@
 
 namespace Ruvents\AbstractApiClient\Exception;
 
-use Ruvents\AbstractApiClient\Common\ContextRequestTrait;
-
-class RequestException extends AbstractException
+class RequestException extends \RuntimeException implements ApiExceptionInterface
 {
-    use ContextRequestTrait;
 }

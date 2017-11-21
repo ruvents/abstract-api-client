@@ -134,7 +134,7 @@ abstract class AbstractApiClient implements ApiClientInterface
                 $context[self::CONTEXT_RESPONSE] = $this->httpClient
                     ->sendRequest($context[self::CONTEXT_REQUEST]);
             } catch (HttpClientException $exception) {
-                throw new RequestException($context, 'Failed to process request.', 0, $exception);
+                throw new RequestException('Failed to process request.', 0, $exception);
             }
 
             // dispatch POST_SEND event
@@ -159,7 +159,7 @@ abstract class AbstractApiClient implements ApiClientInterface
             return $context[self::CONTEXT_RESPONSE_DATA];
         } catch (ApiExceptionInterface $exception) {
             // dispatch ERROR event
-            $errorEvent = new ErrorEvent($this, $exception);
+            $errorEvent = new ErrorEvent($exception, $this, $context);
             $this->eventDispatcher->dispatch(ApiEvents::ERROR, $errorEvent);
 
             // return valid data if it was provided

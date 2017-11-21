@@ -3,15 +3,10 @@
 namespace Ruvents\AbstractApiClient\Event;
 
 use Ruvents\AbstractApiClient\ApiClientInterface;
-use Ruvents\AbstractApiClient\Common;
 use Ruvents\AbstractApiClient\Exception\ApiExceptionInterface;
 
 class ErrorEvent extends AbstractEvent
 {
-    use Common\ContextRequestTrait;
-    use Common\ContextResponseTrait;
-    use Common\ContextResponseDataTrait;
-
     /**
      * @var ApiExceptionInterface
      */
@@ -22,9 +17,9 @@ class ErrorEvent extends AbstractEvent
      */
     private $validData;
 
-    public function __construct(ApiClientInterface $client, ApiExceptionInterface $exception)
+    public function __construct(ApiExceptionInterface $exception, ApiClientInterface $client, array $context)
     {
-        parent::__construct($client, $exception->getContext());
+        parent::__construct($client, $context);
         $this->setException($exception);
     }
 

@@ -21,7 +21,7 @@ trait JsonDecodeTrait
         $decoded = json_decode((string)$response->getBody(), true);
 
         if (JSON_ERROR_NONE !== $code = json_last_error()) {
-            throw new DecodeException($context, json_last_error_msg(), $code);
+            throw new DecodeException(json_last_error_msg(), $code);
         }
 
         return $decoded;

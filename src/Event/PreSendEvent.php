@@ -4,11 +4,16 @@ namespace Ruvents\AbstractApiClient\Event;
 
 use Psr\Http\Message\RequestInterface;
 use Ruvents\AbstractApiClient\AbstractApiClient;
-use Ruvents\AbstractApiClient\Common;
 
 class PreSendEvent extends AbstractEvent
 {
-    use Common\ContextRequestTrait;
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest()
+    {
+        return $this->context[AbstractApiClient::CONTEXT_REQUEST];
+    }
 
     public function setRequest(RequestInterface $request)
     {
