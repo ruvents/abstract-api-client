@@ -4,6 +4,10 @@ namespace Ruvents\AbstractApiClient\Result;
 
 class ResultDenormalizer
 {
+    private function __construct()
+    {
+    }
+
     /**
      * @param mixed  $data
      * @param string $class Namespace\Class or Namespace\Class[]

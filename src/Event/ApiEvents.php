@@ -23,4 +23,8 @@ final class ApiEvents
      * @Event("Ruvents\AbstractApiClient\Event\ErrorEvent")
      */
     const ERROR = 'ruvents.abstract_api_client.error';
+
+    private function __construct()
+    {
+    }
 }
