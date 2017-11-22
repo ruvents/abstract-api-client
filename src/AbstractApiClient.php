@@ -172,18 +172,18 @@ abstract class AbstractApiClient implements ApiClientInterface
     }
 
     /**
+     * @return array
+     */
+    public function getDefaultContext()
+    {
+        return $this->defaultContext;
+    }
+
+    /**
      * @return ApiDefinitionInterface
      */
     protected function getDefinition()
     {
         return $this->definition;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getDefaultContext()
-    {
-        return $this->defaultContext;
     }
 }
