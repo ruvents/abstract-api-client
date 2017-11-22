@@ -1,10 +1,10 @@
 <?php
 
-namespace Ruvents\AbstractApiClient\Builder;
+namespace Ruvents\AbstractApiClient\ContextBuilder;
 
 use Ruvents\AbstractApiClient\ApiClientInterface;
 
-abstract class AbstractBuilder
+abstract class AbstractContextBuilder
 {
     public $context = [];
 

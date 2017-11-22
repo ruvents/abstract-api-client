@@ -64,6 +64,11 @@ abstract class AbstractApiClient implements ApiClientInterface
     private $eventDispatcher;
 
     /**
+     * @var null|string
+     */
+    private $contextBuilderNamespace;
+
+    /**
      * @param ApiDefinitionInterface  $definition
      * @param array                   $defaultContext
      * @param ApiExtensionInterface[] $extensions
@@ -177,6 +182,22 @@ abstract class AbstractApiClient implements ApiClientInterface
     public function getDefaultContext()
     {
         return $this->defaultContext;
+    }
+
+    public function __call($name, array $arguments)
+    {
+        if (!preg_match('/^([0-9a-z]+)([A-Z].*)?$/', $name, $matches)) {
+            throw new \BadMethodCallException(sprintf('Method "%s" does not respect the naming convention.', $name));
+        }
+
+        if (null === $this->contextBuilderNamespace) {
+            $clientClass = get_class($this);
+            $this->contextBuilderNamespace = substr($clientClass, 0, strrpos($clientClass, '\\')).'\\ContextBuilder\\';
+        }
+
+        $class = $this->contextBuilderNamespace.ucfirst($matches[1]).(isset($matches[2]) ? '\\'.$matches[2] : '').'ContextBuilder';
+
+        return new $class($this);
     }
 
     /**
