@@ -7,7 +7,7 @@ use Http\Client\HttpClient;
 use Http\Discovery\HttpClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\MessageFactory;
+use Http\Message\RequestFactory;
 use Http\Message\UriFactory;
 use Ruvents\AbstractApiClient\Definition\ApiDefinitionInterface;
 use Ruvents\AbstractApiClient\Definition\ApiExtensionInterface;
@@ -29,17 +29,17 @@ abstract class AbstractApiClient implements ApiClientInterface
     const CONTEXT_RESPONSE_DATA = '_response_data';
 
     /**
-     * @var UriFactory
+     * @var null|UriFactory
      */
     protected $uriFactory;
 
     /**
-     * @var MessageFactory
+     * @var null|RequestFactory
      */
     protected $requestFactory;
 
     /**
-     * @var HttpClient
+     * @var null|HttpClient
      */
     protected $httpClient;
 
@@ -98,10 +98,21 @@ abstract class AbstractApiClient implements ApiClientInterface
             $extension->configureRequestContext($this->contextResolver);
             $this->eventDispatcher->addSubscriber($extension);
         }
+    }
 
-        $this->uriFactory = UriFactoryDiscovery::find();
-        $this->requestFactory = MessageFactoryDiscovery::find();
-        $this->httpClient = HttpClientDiscovery::find();
+    public function setUriFactory(UriFactory $uriFactory)
+    {
+        $this->uriFactory = $uriFactory;
+    }
+
+    public function setRequestFactory(RequestFactory $requestFactory)
+    {
+        $this->requestFactory = $requestFactory;
+    }
+
+    public function setHttpClient(HttpClient $httpClient)
+    {
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -122,7 +133,7 @@ abstract class AbstractApiClient implements ApiClientInterface
 
             // create request
             $context[self::CONTEXT_REQUEST] = $this->definition
-                ->createRequest($this->uriFactory, $this->requestFactory, $this, $context);
+                ->createRequest($this->getUriFactory(), $this->getRequestFactory(), $this, $context);
 
             // dispatch PRE_SEND event
             $preSendEvent = new PreSendEvent($this, $context);
@@ -136,7 +147,7 @@ abstract class AbstractApiClient implements ApiClientInterface
 
             // send request
             try {
-                $context[self::CONTEXT_RESPONSE] = $this->httpClient
+                $context[self::CONTEXT_RESPONSE] = $this->getHttpClient()
                     ->sendRequest($context[self::CONTEXT_REQUEST]);
             } catch (HttpClientException $exception) {
                 throw new RequestException($context[self::CONTEXT_REQUEST], 'Failed to process request.', 0, $exception);
@@ -200,11 +211,35 @@ abstract class AbstractApiClient implements ApiClientInterface
         return new $class($this);
     }
 
-    /**
-     * @return ApiDefinitionInterface
-     */
     protected function getDefinition()
     {
         return $this->definition;
+    }
+
+    protected function getUriFactory()
+    {
+        if (null === $this->uriFactory) {
+            $this->uriFactory = UriFactoryDiscovery::find();
+        }
+
+        return $this->uriFactory;
+    }
+
+    protected function getRequestFactory()
+    {
+        if (null === $this->requestFactory) {
+            $this->requestFactory = MessageFactoryDiscovery::find();
+        }
+
+        return $this->requestFactory;
+    }
+
+    protected function getHttpClient()
+    {
+        if (null === $this->httpClient) {
+            $this->httpClient = HttpClientDiscovery::find();
+        }
+
+        return $this->httpClient;
     }
 }
