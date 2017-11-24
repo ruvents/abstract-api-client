@@ -100,17 +100,26 @@ abstract class AbstractApiClient implements ApiClientInterface
         }
     }
 
-    public function setUriFactory(UriFactory $uriFactory)
+    /**
+     * @required
+     */
+    public function setUriFactory(UriFactory $uriFactory = null)
     {
         $this->uriFactory = $uriFactory;
     }
 
-    public function setRequestFactory(RequestFactory $requestFactory)
+    /**
+     * @required
+     */
+    public function setRequestFactory(RequestFactory $requestFactory = null)
     {
         $this->requestFactory = $requestFactory;
     }
 
-    public function setHttpClient(HttpClient $httpClient)
+    /**
+     * @required
+     */
+    public function setHttpClient(HttpClient $httpClient = null)
     {
         $this->httpClient = $httpClient;
     }
